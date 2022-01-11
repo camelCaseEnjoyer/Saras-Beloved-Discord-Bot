@@ -1,4 +1,5 @@
 const { Client } = require('discord.js')
+const { MongoClient } = require('mongodb');
 const {DISCORD_TOKEN, MONGO_URI} = require('./config.json')
 
 const DEFAULT_COMMAND_PREFIX = '-';
@@ -35,6 +36,8 @@ const COMMAND_MAP = new Map([
 // Create a new discord client instance. See https://discord.com/developers/docs/topics/gateway#gateway-intents for the intents we're using.
 const client = new Client({ intents: ['GUILDS', 'GUILD_MESSAGES', 'DIRECT_MESSAGES'] });
 
+// Also create a client to log in to mongodb. Not connected yet.
+const dbClient = new MongoClient(MONGO_URI);
 
 client.once('ready', () => {
     console.log('Connected to Discord.');
@@ -73,4 +76,10 @@ client.on('messageCreate', msg => {
     }
 });
 
+dbClient.connect((err) => {
+	if(err) {
+		throw err;
+	}
+	console.log("Connected to mongo!")
+});
 client.login(DISCORD_TOKEN);
