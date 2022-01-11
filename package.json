@@ -1,0 +1,15 @@
+{
+  "name": "sara-pin-and-quote-bot",
+  "version": "0.0.1",
+  "description": "Manages pins and quotes for a discord server",
+  "main": "main.js",
+  "scripts": {
+    "test": "console.log(\"hello world!\")"
+  },
+  "author": "Sara Hoberg",
+  "license": "GNU-GPL-V3",
+  "dependencies": {
+    "discord.js": "^13.5.1",
+    "mongodb": "^4.3.0"
+  }
+}
