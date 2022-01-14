@@ -62,11 +62,6 @@ client.on('messageCreate', msg => {
         if (COMMAND_MAP.has(command)) {
             COMMAND_MAP.get(command)(msg);
         }
-        else {
-            // Please remove this before release. Anything that's openly printing messages is bad news bears.
-            console.log('Received invalid command: ');
-            console.log(msg.content);
-        }
         return;
     }
 
