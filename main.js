@@ -13,7 +13,7 @@ const COMMAND_MAP = new Map([
         msg.reply('Pong!');
         return;
     }],
-    ['setsaraprefix', function (msg) {
+    ['setsaraprefix', async function (msg) {
         const splitContents = msg.content.split(' ');
         if (splitContents.length != 2) {
             msg.reply('setPrefix takes one argument: The new character to use as a command prefix.');
@@ -28,7 +28,26 @@ const COMMAND_MAP = new Map([
             msg.reply('New prefix must be a symbol, not a letter or number.');
             return;
         }
-        //TODO: use a database and actually change the prefix.
+		// The guild ID serves as the key for our database
+		const guildID = msg.guild.id;
+		console.log('attempted guild prefix change: ' + guildID + ' ' + newPrefix);
+        const filter = { _id : guildID }
+		// Create a new document if one doesn't exist
+		const options = { upsert: true }
+		const updateDoc = { 
+		$set: {
+			prefix : newPrefix, _id : guildID 
+			}
+		};
+		const collection = dbClient.db('Discord-Bot-Info').collection('Command-Prefixes');
+		const result = await collection.updateOne(filter, updateDoc, options);
+		if (result.acknowledged) {
+			msg.reply('Mission accomplished. Your new command prefix is ' + newPrefix)
+		}
+		else {
+			msg.reply('Mission failed. Please contact the bot creator and complain.')
+			console.log("warning : guild prefix change failed")
+		}
         return;
     }]
 ])
