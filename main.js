@@ -81,5 +81,5 @@ dbClient.connect((err) => {
 		throw err;
 	}
 	console.log("Connected to mongo!")
+	client.login(DISCORD_TOKEN);
 });
-client.login(DISCORD_TOKEN);
