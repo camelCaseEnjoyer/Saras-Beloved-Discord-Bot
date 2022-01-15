@@ -86,7 +86,7 @@ client.on('messageCreate', msg => {
         return;
     }
 
-    if (lowerText.contains('fight image')) {
+    if (lowerText.includes('fight image')) {
         msg.channel.send('https://imgur.com/OSVZKMt');
         return;
     }
