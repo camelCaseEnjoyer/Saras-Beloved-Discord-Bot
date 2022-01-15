@@ -7,6 +7,27 @@ const CONFIG_COLLECTION_NAME = 'Server-Config'
 const DEFAULT_COMMAND_PREFIX = '-';
 const ALPHANUMERICS_WHITESPACE = 'abcdefghijklmnopqrstuvwxyz1234567890 \t\n';
 
+async function getGuildConfigDoc(guildID) {
+	const configCollection = dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME);
+	var configDoc =  await configCollection.findOne({ _id : guildID });
+	return configDoc;
+}
+
+async function isCommand(msg) {
+	// Don't do a database query on every message, only those that start with symbols
+	const firstChar = msg.content.toLowerCase[0];
+	if (ALPHANUMERICS_WHITESPACE.includes(firstChar)) {
+		return false;
+	}
+	const configDoc = await getGuildConfigDoc(msg.guild.id);
+	// configDoc.prefix is falsey if prefix is not a real field, which we use to our advantage 
+	if (configDoc.prefix) {
+		return msg.content.charAt(0) == configDoc.prefix;
+	}
+	else {
+		return msg.content.charAt(0) == DEFAULT_COMMAND_PREFIX;
+	}
+}
 
 // Maps strings to functions for easily appling text commands. format is ['Command Name', function (msg) {}] with void return.
 const COMMAND_MAP = new Map([
@@ -65,7 +86,7 @@ client.once('ready', () => {
 });
 
 // Waits for messageCreate event. Depends on GUILD_MESSAGES intent. Doesn't detect DMs yet.
-client.on('messageCreate', msg => {
+client.on('messageCreate', async function(msg) {
     // NOTE: If statements are listed in order of precedence. Ignoring our own messages > commands > memes.
     if (msg.author == client.user) {
         console.log('I sent a message!')
@@ -74,9 +95,9 @@ client.on('messageCreate', msg => {
     // ignore case
     const lowerText = msg.content.toLowerCase();
 
-    // TODO: allow guilds to change the command prefix
     // TODO: check for role permissions for major changes
-    if (lowerText[0] == DEFAULT_COMMAND_PREFIX) {
+	let command = await isCommand(msg);
+    if (command) {
         console.log('Processing Command!')
         // Look at just the first word of the command and ignore the prefix. 
         const command = lowerText.split(' ')[0].slice(1);
