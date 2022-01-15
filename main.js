@@ -2,6 +2,8 @@ const { Client } = require('discord.js')
 const { MongoClient } = require('mongodb');
 const {DISCORD_TOKEN, MONGO_URI} = require('./config.json')
 
+const DB_NAME = 'Discord-Bot-Info'
+const CONFIG_COLLECTION_NAME = 'Server-Config'
 const DEFAULT_COMMAND_PREFIX = '-';
 const ALPHANUMERICS_WHITESPACE = 'abcdefghijklmnopqrstuvwxyz1234567890 \t\n';
 
@@ -39,7 +41,7 @@ const COMMAND_MAP = new Map([
 			prefix : newPrefix, _id : guildID 
 			}
 		};
-		const collection = dbClient.db('Discord-Bot-Info').collection('Command-Prefixes');
+		const collection = dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME);
 		const result = await collection.updateOne(filter, updateDoc, options);
 		if (result.acknowledged) {
 			msg.reply('Mission accomplished. Your new command prefix is ' + newPrefix)
@@ -94,6 +96,6 @@ dbClient.connect((err) => {
 	if(err) {
 		throw err;
 	}
-	console.log("Connected to mongo!")
+	console.log("Connected to Mongodb.")
 	client.login(DISCORD_TOKEN);
 });
