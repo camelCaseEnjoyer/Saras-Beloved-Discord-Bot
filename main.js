@@ -35,6 +35,12 @@ async function isCommand(msg) {
 	}
 }
 
+function findChannelByName(guild, name) {
+	return guild.channels.cache.find(channel => {
+			return channel.toString() == name;
+		})
+}
+
 // Maps strings to functions for easily appling text commands. format is ['Command Name', function (msg) {}] with void return.
 const COMMAND_MAP = new Map([
     ['ping', function (msg) {
@@ -75,6 +81,38 @@ const COMMAND_MAP = new Map([
 			console.log("warning : guild prefix change failed")
 		}
         return;
+    }],
+	['setpinboard', async function(msg) {
+		const splitContents = msg.content.split(' ');
+        if (splitContents.length != 2) {
+            msg.reply('setPinboard takes one argument: The new channel to use as a pinboard.');
+            return;
+        }
+        const channelName = splitContents[1];
+		const newPinboard = findChannelByName(msg.guild, channelName)
+		if (newPinboard) {
+			// console.log(`Found channel: ${newPinboard.toString()}`)
+			const filter = { _id : msg.guild.id }
+			const updateDoc = { 
+			$set: {
+					pinboard : newPinboard.id 
+				}
+			}
+			const collection = dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME);
+			const result = await upsertFilter(collection, filter, updateDoc);
+			let x = 5;
+			if (result) {
+				msg.reply(`Change successful! Your new pinboard channel is ${channelName}`);
+			}
+			else {
+				msg.reply('Database error. Please contact the bot creator for details.')
+			}
+		}
+		else {
+			// console.log(`could not find channel: ${channelName}`);
+			msg.reply(`${channelName} was not found. Please verify spelling, and make sure you have included the # prefix.`);
+		}
+	}],
 	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
 	['deleteallserverdata', async function (msg) {
 		const guildID = msg.guild.id;
