@@ -3,12 +3,12 @@ const { MongoClient } = require('mongodb');
 const {DISCORD_TOKEN, MONGO_URI} = require('./config.json')
 
 const DB_NAME = 'Discord-Bot-Info'
-const CONFIG_COLLECTION_NAME = 'Server-Config'
+const SERVER_CONFIG_NAME = 'Server-Config'
 const DEFAULT_COMMAND_PREFIX = '-';
 const ALPHANUMERICS_WHITESPACE = 'abcdefghijklmnopqrstuvwxyz1234567890 \t\n';
 
 async function getGuildConfigDoc(guildID) {
-	const configCollection = dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME);
+	const configCollection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
 	var configDoc =  await configCollection.findOne({ _id : guildID });
 	return configDoc;
 }
@@ -98,7 +98,7 @@ const COMMAND_MAP = new Map([
 					pinboard : newPinboard.id 
 				}
 			}
-			const collection = dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME);
+			const collection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
 			const result = await upsertFilter(collection, filter, updateDoc);
 			if (result) {
 				msg.reply(`Change successful! Your new pinboard channel is ${channelName}`);
@@ -115,7 +115,7 @@ const COMMAND_MAP = new Map([
 	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
 	['deleteallserverdata', async function (msg) {
 		const guildID = msg.guild.id;
-		result = await dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME).findOneAndDelete({_id : guildID});
+		result = await dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME).findOneAndDelete({_id : guildID});
 		if(result) {
 			msg.reply('Everything is gone! Oh no!')
 		}
