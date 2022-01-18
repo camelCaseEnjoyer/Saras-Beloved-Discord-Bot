@@ -75,6 +75,17 @@ const COMMAND_MAP = new Map([
 			console.log("warning : guild prefix change failed")
 		}
         return;
+	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
+	['deleteallserverdata', async function (msg) {
+		const guildID = msg.guild.id;
+		result = await dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME).findOneAndDelete({_id : guildID});
+		if(result) {
+			msg.reply('Everything is gone! Oh no!')
+		}
+		else {
+			msg.reply('Command failed! Oh no!')
+		}
+	}]
 ])
 
 // Create a new discord client instance. See https://discord.com/developers/docs/topics/gateway#gateway-intents for the intents we're using.
