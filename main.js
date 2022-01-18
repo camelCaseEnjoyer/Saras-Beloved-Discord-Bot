@@ -68,7 +68,7 @@ const COMMAND_MAP = new Map([
 		const result = await upsertFilter(collection, filter, updateDoc);
 		
 		if (result.acknowledged) {
-			msg.reply('Mission accomplished. Your new command prefix is ' + newPrefix)
+			msg.reply(`Mission accomplished. Your new command prefix is ${newPrefix}.`)
 		}
 		else {
 			msg.reply('Mission failed. Please contact the bot creator and complain.')
