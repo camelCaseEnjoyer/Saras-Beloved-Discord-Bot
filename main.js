@@ -13,6 +13,12 @@ async function getGuildConfigDoc(guildID) {
 	return configDoc;
 }
 
+// Upsert a document, using the filter as the default template for the created document.
+async function upsertFilter(collection, filter, updateDoc) {
+	updateDoc.$setOnInsert = filter;
+	return collection.updateOne(filter, updateDoc, { upsert: true});
+}
+
 async function isCommand(msg) {
 	// Don't do a database query on every message, only those that start with symbols
 	const firstChar = msg.content.toLowerCase[0];
@@ -51,19 +57,16 @@ const COMMAND_MAP = new Map([
             msg.reply('New prefix must be a symbol, not a letter or number.');
             return;
         }
-		// The guild ID serves as the key for our database
-		const guildID = msg.guild.id;
-		console.log('attempted guild prefix change: ' + guildID + ' ' + newPrefix);
-        const filter = { _id : guildID }
-		// Create a new document if one doesn't exist
-		const options = { upsert: true }
+		// Searches for a record by guildID, sets prefix and creates the document if it doesn't exist.
+        const filter = { _id : msg.guild.id }
 		const updateDoc = { 
 		$set: {
-			prefix : newPrefix, _id : guildID 
+			prefix : newPrefix 
 			}
 		};
 		const collection = dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME);
-		const result = await collection.updateOne(filter, updateDoc, options);
+		const result = await upsertFilter(collection, filter, updateDoc);
+		
 		if (result.acknowledged) {
 			msg.reply('Mission accomplished. Your new command prefix is ' + newPrefix)
 		}
@@ -72,7 +75,6 @@ const COMMAND_MAP = new Map([
 			console.log("warning : guild prefix change failed")
 		}
         return;
-    }]
 ])
 
 // Create a new discord client instance. See https://discord.com/developers/docs/topics/gateway#gateway-intents for the intents we're using.
@@ -112,6 +114,7 @@ client.on('messageCreate', async function(msg) {
         return;
     }
 });
+/*
 
 dbClient.connect((err) => {
 	if(err) {
