@@ -100,7 +100,6 @@ const COMMAND_MAP = new Map([
 			}
 			const collection = dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME);
 			const result = await upsertFilter(collection, filter, updateDoc);
-			let x = 5;
 			if (result) {
 				msg.reply(`Change successful! Your new pinboard channel is ${channelName}`);
 			}
