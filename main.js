@@ -199,6 +199,6 @@ dbClient.connect((err) => {
 	if(err) {
 		throw err;
 	}
-	console.log("Connected to Mongodb.")
+	console.log('Connected to Mongodb.')
 	client.login(DISCORD_TOKEN);
 });
