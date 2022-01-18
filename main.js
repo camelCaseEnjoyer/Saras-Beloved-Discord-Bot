@@ -27,7 +27,7 @@ async function isCommand(msg) {
 	}
 	const configDoc = await getGuildConfigDoc(msg.guild.id);
 	// configDoc.prefix is falsey if prefix is not a real field, which we use to our advantage 
-	if (configDoc.prefix) {
+	if (configDoc && configDoc.prefix) {
 		return msg.content.charAt(0) == configDoc.prefix;
 	}
 	else {
