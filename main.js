@@ -112,6 +112,37 @@ const COMMAND_MAP = new Map([
 			msg.reply(`${channelName} was not found. Please verify spelling, and make sure you have included the # prefix.`);
 		}
 	}],
+	['setchannelpinboard', async function (msg) {
+		const splitContents = msg.content.split(' ');
+        if (splitContents.length != 2) {
+            msg.reply('setPinboard takes one argument: The new channel to use as a pinboard.');
+            return;
+        }
+        const channelName = splitContents[1];
+		const newPinboard = findChannelByName(msg.guild, channelName)
+		if (newPinboard) {
+			// console.log(`Found channel: ${newPinboard.toString()}`)
+			const filter = { _id : msg.channel.id }
+			const updateDoc = { 
+			$set: {
+					pinboard : newPinboard.id 
+				}
+			}
+			const collection = dbClient.db(DB_NAME).collection(CHANNEL_CONFIG_NAME);
+			const result = await upsertFilter(collection, filter, updateDoc);
+			if (result) {
+				msg.reply(`Change successful! The new pinboard for ${msg.channel.toString()} is ${channelName}`);
+			}
+			else {
+				msg.reply('Database error. Please contact the bot creator for details.')
+			}
+		}
+		else {
+			// console.log(`could not find channel: ${channelName}`);
+			msg.reply(`${channelName} was not found. Please verify spelling, and make sure you have included the # prefix.`);
+		}
+	}],
+	}],
 	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
 	['deleteallserverdata', async function (msg) {
 		const guildID = msg.guild.id;
