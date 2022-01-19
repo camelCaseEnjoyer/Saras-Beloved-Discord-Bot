@@ -48,6 +48,18 @@ function findChannelByName(guild, name) {
 		})
 }
 
+function copyMessage(msg) {
+	// Discord is stinky about sending blank messages, even if they have attachments. Therefore, we use this weird string template.
+	let newMessage = { content : `${msg.content} `,
+		files : []};
+	for (const pair of msg.attachments) {
+		// console.log(pair[1].url);
+		newMessage.files.push(pair[1].url);
+	}
+	return newMessage;
+	// TODO: Verify this works with non-image files.
+}
+
 // Maps strings to functions for easily appling text commands. format is ['Command Name', function (msg) {}] with void return.
 const COMMAND_MAP = new Map([
     ['ping', function (msg) {
@@ -159,6 +171,17 @@ const COMMAND_MAP = new Map([
 		}
 		else {
 			msg.reply('Command failed! Oh no!')
+		}
+	}],
+	['copythismessage', async function (msg) {
+		// fetchReference returns the originating message of a reply.
+		try{
+			const toCopy = await msg.fetchReference()
+			msg.reply(copyMessage(toCopy));
+		} 
+		catch (MESSAGE_REFERENCE_MISSING) {
+			msg.reply('Originating message not found. Please only use this command in reply to another message.');
+			return;
 		}
 	}]
 ])
