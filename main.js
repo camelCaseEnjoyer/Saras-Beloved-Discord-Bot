@@ -42,6 +42,7 @@ async function isCommand(msg) {
 	}
 }
 
+// Finds a channel with a certain name in a specific guild
 function findChannelByName(guild, name) {
 	return guild.channels.cache.find(channel => {
 			return channel.toString() == name;
