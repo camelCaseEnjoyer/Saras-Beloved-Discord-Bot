@@ -4,12 +4,19 @@ const {DISCORD_TOKEN, MONGO_URI} = require('./config.json')
 
 const DB_NAME = 'Discord-Bot-Info'
 const SERVER_CONFIG_NAME = 'Server-Config'
+const CHANNEL_CONFIG_NAME = 'Channel-Config'
 const DEFAULT_COMMAND_PREFIX = '-';
 const ALPHANUMERICS_WHITESPACE = 'abcdefghijklmnopqrstuvwxyz1234567890 \t\n';
 
 async function getGuildConfigDoc(guildID) {
 	const configCollection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
 	var configDoc = configCollection.findOne({ _id : guildID });
+	return configDoc;
+}
+
+async function getChannelConfigDoc(channelID) {
+	const configCollection = dbClient.db(DB_NAME).collection(CHANNEL_CONFIG_NAME);
+	var configDoc = configCollection.findOne({ _id : channelID });
 	return configDoc;
 }
 
