@@ -9,7 +9,7 @@ const ALPHANUMERICS_WHITESPACE = 'abcdefghijklmnopqrstuvwxyz1234567890 \t\n';
 
 async function getGuildConfigDoc(guildID) {
 	const configCollection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
-	var configDoc =  await configCollection.findOne({ _id : guildID });
+	var configDoc = configCollection.findOne({ _id : guildID });
 	return configDoc;
 }
 
