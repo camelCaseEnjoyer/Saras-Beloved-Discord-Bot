@@ -7,6 +7,7 @@ const SERVER_CONFIG_NAME = 'Server-Config'
 const CHANNEL_CONFIG_NAME = 'Channel-Config'
 const DEFAULT_COMMAND_PREFIX = '-';
 const ALPHANUMERICS_WHITESPACE = 'abcdefghijklmnopqrstuvwxyz1234567890 \t\n';
+const DEFAULT_MAX_PINS = 20;
 
 async function getGuildConfigDoc(guildID) {
 	const configCollection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
@@ -18,6 +19,39 @@ async function getChannelConfigDoc(channelID) {
 	const configCollection = dbClient.db(DB_NAME).collection(CHANNEL_CONFIG_NAME);
 	var configDoc = configCollection.findOne({ _id : channelID });
 	return configDoc;
+}
+
+async function updateChannelPins(channel, guildPinboardID = null) {
+	let channelConfig = await getChannelConfigDoc(channel.id);
+	var pinboardID;
+	
+	if(channelConfig && channelConfig.pinboard) {
+		pinboardID = channelConfig.pinboard;
+	}
+	else if (guildPinboardID) {
+		pinboardID = guildPinboardID;
+	}
+	else {
+		let serverConfig = await getGuildConfigDoc(channel.guild.id);
+
+		if (serverConfig) {
+			pinboardID = serverConfig.pinboard
+		}
+	}
+	
+	if(!pinboardID) {
+		return false;
+	}
+	
+	const pinboard = channel.guild.channels.fetch(pinboardID);
+	const pinnedMessages = channel.messages.fetchPinned();
+	var unpinMessage;
+	while(pinnedMessages.size > DEFAULT_MAX_PINS) {
+		unpinMessage = pinnedMessages.last()
+		unpinMessage.unpin();
+		pinboard.send(copyMessage(unpinMessage));
+	}
+	return true;
 }
 
 // Upsert a document, using the filter as the default template for the created document.
@@ -50,7 +84,7 @@ function findChannelByName(guild, name) {
 }
 
 function copyMessage(msg) {
-	// Discord is stinky about sending blank messages, even if they have attachments. Therefore, we use this weird string template.
+	// Discord is stinky about sending blank messages, even if they have attachments. Therefore, we use this weird string template to add a space at the end.
 	let newMessage = { content : `${msg.content} `,
 		files : []};
 	for (const pair of msg.attachments) {
