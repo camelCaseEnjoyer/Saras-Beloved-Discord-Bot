@@ -39,11 +39,11 @@ async function updateChannelPins(channel, guildPinboardID = null) {
 		}
 	}
 	
-	if(!pinboardID) {
+	const pinboard = channel.guild.channels.fetch(pinboardID);
+	if(!pinboard) {
 		return false;
 	}
 	
-	const pinboard = channel.guild.channels.fetch(pinboardID);
 	const pinnedMessages = channel.messages.fetchPinned();
 	var unpinMessage;
 	while(pinnedMessages.size > DEFAULT_MAX_PINS) {
