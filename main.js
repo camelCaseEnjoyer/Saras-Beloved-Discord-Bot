@@ -258,7 +258,19 @@ client.on('messageCreate', async function(msg) {
         return;
     }
 });
-/*
+
+client.on('guildDelete', async function (guild) {
+	const guildConfigs = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
+	// NOTE: does not yet delete channel configs.
+	const result = await guildConfigs.findOneAndDelete({_id : guild.id});
+	if(result) {
+		console.log(`Removed from guild ${guild.id}, deleted related records.`);
+	}
+	else {
+		console.log(`Removed from guild ${guild.id}, unable to delete records.`);
+	}
+});
+
 
 dbClient.connect((err) => {
 	if(err) {
