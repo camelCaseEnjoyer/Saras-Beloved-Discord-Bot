@@ -162,7 +162,7 @@ const COMMAND_MAP = new Map([
 		}
         return;
     }],
-	['setpinboard', async function(msg) {
+	['setserverpinboard', async function(msg) {
 		const splitContents = msg.content.split(' ');
         if (splitContents.length != 2) {
             msg.reply('setPinboard takes one argument: The new channel to use as a pinboard.');
