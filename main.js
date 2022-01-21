@@ -99,6 +99,16 @@ async function upsertFilter(collection, filter, updateDoc) {
 	return collection.updateOne(filter, updateDoc, { upsert: true});
 }
 
+// Upsert a document lazily. Takes a collection, an ID to use as a filter, and a simple object that shows what to update in the basic form {Field : value}
+async function lazyUpsert(collection, ID, updateObj) {
+	let filter = {_id : ID}
+	let updateDoc = { 
+	$set : updateObj,
+	$setOnInsert: filter
+	}
+	return collection.updateOne(filter, updateDoc, {upsert: true});
+}
+
 async function isCommand(msg) {
 	// Don't do a database query on every message, only those that start with symbols
 	const firstChar = msg.content.toLowerCase[0];
