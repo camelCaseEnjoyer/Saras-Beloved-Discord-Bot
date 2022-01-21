@@ -1,6 +1,6 @@
 const { Client } = require('discord.js')
 const { MongoClient } = require('mongodb');
-const {DISCORD_TOKEN, MONGO_URI} = require('./config.json')
+const {DISCORD_TOKEN, MONGO_URI, ADMIN_USERNAME} = require('./config.json')
 
 const DB_NAME = 'Discord-Bot-Info'
 const SERVER_CONFIG_NAME = 'Server-Config'
@@ -93,12 +93,6 @@ async function updateGuildPins(guild) {
 	return true;
 }
 
-// Upsert a document, using the filter as the default template for the created document.
-async function upsertFilter(collection, filter, updateDoc) {
-	updateDoc.$setOnInsert = filter;
-	return collection.updateOne(filter, updateDoc, { upsert: true});
-}
-
 // Upsert a document lazily. Takes a collection, an ID to use as a filter, and a simple object that shows what to update in the basic form {Field : value}
 async function lazyUpsert(collection, ID, updateObj) {
 	let filter = {_id : ID}
@@ -143,112 +137,83 @@ function copyMessage(msg) {
 	return newMessage;
 }
 
-// Maps strings to functions for easily appling text commands. format is ['Command Name', function (msg) {}] with void return.
+// Maps strings to functions for easily appling text commands. format is ['Command Name', function (msg) {}] and returns a string for the reply.
 const COMMAND_MAP = new Map([
     ['ping', function (msg) {
-        console.log('Ping!');
-        msg.reply('Pong!');
-        return;
+        return 'Pong!'
     }],
     ['setsaraprefix', async function (msg) {
         const splitContents = msg.content.split(' ');
         if (splitContents.length != 2) {
-            msg.reply('setPrefix takes one argument: The new character to use as a command prefix.');
-            return;
+            return 'setPrefix takes one argument: The new character to use as a command prefix.'
         }
         const newPrefix = splitContents[1];
         if (newPrefix.length > 1) {
-            msg.reply('New prefix must be exactly one character.');
-            return;
+            return 'New prefix must be exactly one character.';
         }
         if (ALPHANUMERICS_WHITESPACE.includes(newPrefix.toLowerCase())) {
-            msg.reply('New prefix must be a symbol, not a letter or number.');
-            return;
+            return 'New prefix must be a symbol, not a letter or number.';
         }
-		// Searches for a record by guildID, sets prefix and creates the document if it doesn't exist.
-        const filter = { _id : msg.guild.id }
-		const updateDoc = { 
-		$set: {
-			prefix : newPrefix 
-			}
-		};
-		const collection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
-		const result = await upsertFilter(collection, filter, updateDoc);
 		
-		if (result.acknowledged) {
-			msg.reply(`Mission accomplished. Your new command prefix is ${newPrefix}.`)
+		const collection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
+		const result = await lazyUpsert(collection, msg.guild.id, {prefix : newPrefix});
+		
+		if (result) {
+			return `Mission accomplished. Your new command prefix is ${newPrefix}.`;
 		}
 		else {
-			msg.reply('Mission failed. Please contact the bot creator and complain.')
-			console.log("warning : guild prefix change failed")
+			return `Mission failed. Please contact @${ADMIN_USERNAME} and complain.`;
+			
 		}
-        return;
     }],
 	['setserverpinboard', async function(msg) {
 		const splitContents = msg.content.split(' ');
         if (splitContents.length != 2) {
-            msg.reply('setPinboard takes one argument: The new channel to use as a pinboard.');
-            return;
+            return 'setPinboard takes one argument: The new channel to use as a pinboard.';
         }
         const channelName = splitContents[1];
 		const newPinboard = findChannelByName(msg.guild, channelName)
 		if (newPinboard) {
-			// console.log(`Found channel: ${newPinboard.toString()}`)
-			const filter = { _id : msg.guild.id }
-			const updateDoc = { 
-			$set: {
-					pinboard : newPinboard.id 
-				}
-			}
+	
 			const collection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
-			const result = await upsertFilter(collection, filter, updateDoc);
+			const result = await lazyUpsert(collection, msg.guild.id, {pinboard : newPinboard.id});
 			if (result) {
-				msg.reply(`Change successful! Your new pinboard channel is ${channelName}`);
+				return `Change successful! Your new pinboard channel is ${channelName}`;
 			}
 			else {
-				msg.reply('Database error. Please contact the bot creator for details.')
+				return 'Database error. Please contact @${ADMIN_USERNAME} for details.';
 			}
 		}
 		else {
-			// console.log(`could not find channel: ${channelName}`);
-			msg.reply(`${channelName} was not found. Please verify spelling, and make sure you have included the # prefix.`);
+			return `${channelName} was not found. Please verify spelling, and make sure you have included the # prefix.`;
 		}
 	}],
 	['setchannelpinboard', async function (msg) {
 		const splitContents = msg.content.split(' ');
         if (splitContents.length != 2) {
-            msg.reply('setPinboard takes one argument: The new channel to use as a pinboard.');
-            return;
+            return 'setPinboard takes one argument: The new channel to use as a pinboard.';
         }
         const channelName = splitContents[1];
-		const newPinboard = findChannelByName(msg.guild, channelName)
+		const newPinboard = findChannelByName(msg.guild, channelName);
 		if (newPinboard) {
-			// console.log(`Found channel: ${newPinboard.toString()}`)
-			const filter = { _id : msg.channel.id }
-			const updateDoc = { 
-			$set: {
-					pinboard : newPinboard.id 
-				}
-			}
 			const collection = dbClient.db(DB_NAME).collection(CHANNEL_CONFIG_NAME);
-			const result = await upsertFilter(collection, filter, updateDoc);
+			const result = await lazyUpsert(collection, msg.channel.id, {pinboard : newPinboard.id});
 			if (result) {
-				msg.reply(`Change successful! The new pinboard for ${msg.channel.toString()} is ${channelName}`);
 				pinManager.updateChannelPins(msg.channel);
+				return `Change successful! The new pinboard for ${msg.channel.toString()} is ${channelName}`;
 			}
 			else {
-				msg.reply('Database error. Please contact the bot creator for details.')
+				return `Database error. Please contact @${ADMIN_USERNAME} for details.`
 			}
 		}
 		else {
 			// console.log(`could not find channel: ${channelName}`);
-			msg.reply(`${channelName} was not found. Please verify spelling, and make sure you have included the # prefix.`);
-			return;
+			return `${channelName} was not found. Please verify spelling, and make sure you have included the # prefix.`;
 		}
 	}],
 	['help', async function (msg) {
 		let currentPrefix = msg.content.charAt(0);
-		msg.reply(`Thanks for choosing ${client.user.username} for your pinbot needs. Here's a rundown on all the commands you'll need:\n\n` +
+		return `Thanks for choosing ${client.user.username} for your pinbot needs. Here's a rundown on all the commands you'll need:\n\n` +
 			`**help** - I think you have this one figured out.\n\n` +
 			`**setSaraPrefix** - Takes one character as an argument, and changes the default prefix to use my commands. ` +
 			`Example: \`\`\`${currentPrefix}setSaraPrefix !\`\`\`\n\n` +
@@ -264,39 +229,37 @@ const COMMAND_MAP = new Map([
 			`**unblacklistChannel** - Removes a channel from the blacklist. Example: \`\`\`${currentPrefix}unblacklistChannel\`\`\` ` +
 			`[WARNING: Not Yet Implemented!]\n\n` +
 			`**updateServerPins** - Checks all channels for pin overflow, and sends excess messages to the appropriate pinboard. ` +
-			`Example: \`\`\`${currentPrefix}updateGuildPins\`\`\`\n\n`)
+			`Example: \`\`\`${currentPrefix}updateGuildPins\`\`\`\n\n` +
+			`For additional assistance, message @${ADMIN_USERNAME}.`
 	}],
 	['updateserverpins', async function (msg) {
 		const result = await updateGuildPins(msg.guild);
 		if(result) {
-			msg.reply('Success. Pins should be updated.');
+			return 'Success. Pins should be updated.';
 		}
 		else {
-			msg.reply('Command failed. If you have not yet set a pinboard, please do so with the setServerPinboard or setChannelPinboard commands.')
+			return 'Command failed. If you have not yet set a pinboard, please do so with the setServerPinboard or setChannelPinboard commands.';
 		}
-		return;
 	}],
 	['setmaxpins', async function(msg) {
 		const splitContents = msg.content.split(' ');
         if (splitContents.length != 2 || isNaN(splitContents[1])) {
-            msg.reply('setPinboard takes one argument: The new maximum number of pins before messages are moved into pinboards.');
-            return;
+            return 'setPinboard takes one argument: The new maximum number of pins before messages are moved into pinboards.';
         }
 		
 		const newMaxPins = parseInt(splitContents[1]);
 		
 		if (newMaxPins > 49 || newMaxPins < 0) {
-			msg.reply('The number of pins must be between 0 and 49, inclusive on both ends.');
-			return;
+			return 'The number of pins must be between 0 and 49, inclusive on both ends.';
 		}
 		
 		const collection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
 		const result = await lazyUpsert(collection, msg.guild.id, { 'maxPins' : newMaxPins})
 		if(result) {
-			msg.reply(`Command successful. The new pin limit for this server is ${newMaxPins}.`);
+			return `Command successful. The new pin limit for this server is ${newMaxPins}.`;
 		}
 		else {
-			msg.reply(`Database access failed. Please contact the bot creator for assistance.`);
+			return `Database access failed. Please contact @${ADMIN_USERNAME} for assistance.`;
 		}
 	
 	}],
@@ -308,21 +271,20 @@ const COMMAND_MAP = new Map([
 		const guildID = msg.guild.id;
 		result = await dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME).findOneAndDelete({_id : guildID});
 		if(result) {
-			msg.reply('Everything is gone! Oh no!')
+			return 'Everything is gone! Oh no!'
 		}
 		else {
-			msg.reply('Command failed! Oh no!')
+			return 'Command failed! Oh no!'
 		}
 	}],
 	['copythismessage', async function (msg) {
 		// fetchReference returns the originating message of a reply.
 		try{
 			const toCopy = await msg.fetchReference()
-			msg.reply(copyMessage(toCopy));
+			return copyMessage(toCopy);
 		} 
 		catch (MESSAGE_REFERENCE_MISSING) {
-			msg.reply('Originating message not found. Please only use this command in reply to another message.');
-			return;
+			return 'Originating message not found. Please only use this command in reply to another message.';
 		}
 	}]
 ])
@@ -357,7 +319,8 @@ client.on('messageCreate', async function(msg) {
         // Look at just the first word of the command and ignore the prefix. 
         const command = lowerText.split(' ')[0].slice(1);
         if (COMMAND_MAP.has(command)) {
-            COMMAND_MAP.get(command)(msg);
+            let response = await COMMAND_MAP.get(command)(msg);
+			msg.reply(response);
         }
         return;
     }
