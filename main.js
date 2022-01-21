@@ -234,9 +234,9 @@ const COMMAND_MAP = new Map([
 			`**setChannelPinboard** - As above, but specific to the current channel. This overrides the setServerPinboard command for ` +
 			`that channel. Example: \`\`\`${currentPrefix}setChannelPinboard #special-pins\`\`\`\n\n` +
 			`**setMaxPins** - Sets how many pins a channel can have before excess pins are sent to the pinboard. Defaults to ${DEFAULT_MAX_PINS}. ` +
-			`Example: \`\`\`${currentPrefix}setMaxPins 35\`\`\` [WARNING: Not Yet Implemented!]\n\n` +
+			`Example: \`\`\`${currentPrefix}setMaxPins 35\`\`\`\n\n` +
 			`**blacklistChannel** - Blacklists a channel from unsolicited memery. Does not block pinboard mechanics. Example: ` +
-			`\`\`\`${currentPrefix}blacklistChannel\`\`\`\ [WARNING: Not Yet Implemented!]\n\n` + 
+			`\`\`\`${currentPrefix}blacklistChannel\`\`\`\\n\n` + 
 			`**unblacklistChannel** - Removes a channel from the blacklist. Example: \`\`\`${currentPrefix}unblacklistChannel\`\`\` ` +
 			`[WARNING: Not Yet Implemented!]\n\n` +
 			`**updateServerPins** - Checks all channels for pin overflow, and sends excess messages to the appropriate pinboard. ` +
