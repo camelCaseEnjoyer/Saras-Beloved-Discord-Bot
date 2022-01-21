@@ -51,7 +51,7 @@ class PinLockManager {
 			let copy = copyMessage(unpinMessage);
 			// Notepad++ is mean about this, but we're using three escaped backticks here
 			let sentDate = new Date(unpinMessage.createdTimestamp);
-			copy.content = `\`\`\`\nAuthor: ${unpinMessage.author.username}\n` +
+			copy.content = `${unpinMessage.url}\n\`\`\`\nAuthor: ${unpinMessage.author.username}\n` +
 			`Channel: ${unpinMessage.channel.name}\n` +
 			`Date: ${sentDate.toDateString()}\n` +
 			`Time: ${sentDate.toTimeString()}\n` +
