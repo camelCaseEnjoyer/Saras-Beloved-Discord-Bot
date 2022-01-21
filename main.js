@@ -289,6 +289,21 @@ const COMMAND_MAP = new Map([
 			return `Database access failed. Please contact @${ADMIN_USERNAME}.`;
 		}
 	}],
+	['unblacklistchannel', async function (msg) {
+		const splitContents = msg.content.split(' ');
+        if (splitContents.length != 1) {
+            return 'unblacklistChannel takes 0 arguments; simply use it in the channel to be blacklisted.';
+        }
+		const collection = dbClient.db(DB_NAME).collection(CHANNEL_CONFIG_NAME);
+		const result = await lazyUpsert(collection, msg.channel.id, {blacklisted : false});
+	
+		if(result) {
+			return `Success! Channel removed from the blacklist.`;
+		}
+		else {
+			return `Database access failed. Please contact @${ADMIN_USERNAME}.`;
+		}
+	}],
 	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
 	['deleteallserverdata', async function (msg) {
 		const guildID = msg.guild.id;
