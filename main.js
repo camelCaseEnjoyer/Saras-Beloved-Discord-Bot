@@ -22,6 +22,11 @@ class PinLockManager {
 		}
 		console.log('Channel is unlocked. Let\'s get down to business.');
 		this._lockedChannels.push(channel.id);
+		var maxPins = DEFAULT_MAX_PINS;
+		const serverConfig = await getGuildConfigDoc(channel.guild.id);
+		if(serverConfig && serverConfig.maxPins) {
+			maxPins = serverConfig.maxPins;
+		}
 		let channelConfig = await getChannelConfigDoc(channel.id);
 		var pinboardID;
 		
@@ -47,7 +52,7 @@ class PinLockManager {
 		let pinnedMessages = await channel.messages.fetchPinned();
 		console.log(`pinnedMessages.size: ${pinnedMessages.size}`)
 		var unpinMessage;
-		while(pinnedMessages.size > DEFAULT_MAX_PINS) {
+		while(pinnedMessages.size > maxPins) {
 			console.log('We are trying to unpin');
 			console.log(`pinnedMessages.size: ${pinnedMessages.size}`)
 			unpinMessage = pinnedMessages.at(-1)
