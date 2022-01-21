@@ -75,6 +75,22 @@ async function getChannelConfigDoc(channelID) {
 	return configDoc;
 }
 
+async function updateGuildPins(guild) {
+	const channels = await guild.channels.fetch();
+
+	const serverConfig = getGuildConfigDoc(guild.id);
+	let results = [];
+	for (const pair of channels) {
+		// Text channels only, please.
+		if (pair[1].type == 'GUILD_TEXT') {
+			results.push(pinManager.updateChannelPins(pair[1]));
+		}
+	}
+	results = await Promise.all(results);
+	if (results.indexOf(false) != -1) {
+		return false;
+	}
+	return true;
 }
 
 // Upsert a document, using the filter as the default template for the created document.
@@ -115,7 +131,6 @@ function copyMessage(msg) {
 		newMessage.files.push(pair[1].url);
 	}
 	return newMessage;
-	// TODO: Verify this works with non-image files.
 }
 
 // Maps strings to functions for easily appling text commands. format is ['Command Name', function (msg) {}] with void return.
@@ -237,8 +252,19 @@ const COMMAND_MAP = new Map([
 			`\`\`\`${currentPrefix}blacklistChannel\`\`\`\ [WARNING: Not Yet Implemented!]\n\n` + 
 			`**unblacklistChannel** - Removes a channel from the blacklist. Example: \`\`\`${currentPrefix}unblacklistChannel\`\`\` ` +
 			`[WARNING: Not Yet Implemented!]\n\n` +
-			`**updateGuildPins** - Checks all channels for pin overflow, and sends excess messages to the appropriate pinboard. ` +
-			`Example: \`\`\`${currentPrefix}updateGuildPins\`\`\` [WARNING: Not Yet Implemented!]\n\n`)
+			`**updateServerPins** - Checks all channels for pin overflow, and sends excess messages to the appropriate pinboard. ` +
+			`Example: \`\`\`${currentPrefix}updateGuildPins\`\`\`\n\n`)
+	}],
+	['updateserverpins', async function (msg) {
+		const result = await updateGuildPins(msg.guild);
+		if(result) {
+			msg.reply('Success. Pins should be updated.');
+		}
+		else {
+			msg.reply('Command failed. If you have not yet set a pinboard, please do so with the setServerPinboard or setChannelPinboard commands.')
+		}
+		return;
+	}],
 	}],
 	}],
 	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
