@@ -275,6 +275,29 @@ const COMMAND_MAP = new Map([
 		}
 		return;
 	}],
+	['setmaxpins', async function(msg) {
+		const splitContents = msg.content.split(' ');
+        if (splitContents.length != 2 || isNaN(splitContents[1])) {
+            msg.reply('setPinboard takes one argument: The new maximum number of pins before messages are moved into pinboards.');
+            return;
+        }
+		
+		const newMaxPins = parseInt(splitContents[1]);
+		
+		if (newMaxPins > 49 || newMaxPins < 0) {
+			msg.reply('The number of pins must be between 0 and 49, inclusive on both ends.');
+			return;
+		}
+		
+		const collection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
+		const result = await lazyUpsert(collection, msg.guild.id, { 'maxPins' : newMaxPins})
+		if(result) {
+			msg.reply(`Command successful. The new pin limit for this server is ${newMaxPins}.`);
+		}
+		else {
+			msg.reply(`Database access failed. Please contact the bot creator for assistance.`);
+		}
+	
 	}],
 	}],
 	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
