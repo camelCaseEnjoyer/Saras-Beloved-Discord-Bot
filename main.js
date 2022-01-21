@@ -150,7 +150,7 @@ const COMMAND_MAP = new Map([
 			prefix : newPrefix 
 			}
 		};
-		const collection = dbClient.db(DB_NAME).collection(CONFIG_COLLECTION_NAME);
+		const collection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
 		const result = await upsertFilter(collection, filter, updateDoc);
 		
 		if (result.acknowledged) {
