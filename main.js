@@ -15,12 +15,11 @@ class PinLockManager {
 		this._lockedChannels = [];
 	}
 	
-	async updateChannelPins(channel, guildPinboardID = null) {
+	async updateChannelPins(channel) {
 		if (this._lockedChannels.indexOf(channel.id) != -1) {
 			console.log('Channel is locked. Ending.')
 			return true;
 		}
-		console.log('Channel is unlocked. Let\'s get down to business.');
 		this._lockedChannels.push(channel.id);
 		var maxPins = DEFAULT_MAX_PINS;
 		const serverConfig = await getGuildConfigDoc(channel.guild.id);
@@ -33,22 +32,15 @@ class PinLockManager {
 		if(channelConfig && channelConfig.pinboard) {
 			pinboardID = channelConfig.pinboard;
 		}
-		else if (guildPinboardID) {
-			pinboardID = guildPinboardID;
+		else if (serverConfig && serverConfig.pinboard) {
+			pinboardID = serverConfig.pinboard;
 		}
 		else {
-			let serverConfig = await getGuildConfigDoc(channel.guild.id);
-
-			if (serverConfig) {
-				pinboardID = serverConfig.pinboard
-			}
-		}
-		
-		const pinboard = await channel.guild.channels.fetch(pinboardID);
-		if(!pinboard) {
 			return false;
 		}
 		
+		const pinboard = await channel.guild.channels.fetch(pinboardID);
+
 		let pinnedMessages = await channel.messages.fetchPinned();
 		console.log(`pinnedMessages.size: ${pinnedMessages.size}`)
 		var unpinMessage;
