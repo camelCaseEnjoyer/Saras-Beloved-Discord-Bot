@@ -212,6 +212,7 @@ const COMMAND_MAP = new Map([
 			const result = await upsertFilter(collection, filter, updateDoc);
 			if (result) {
 				msg.reply(`Change successful! The new pinboard for ${msg.channel.toString()} is ${channelName}`);
+				updateChannelPins(msg.channel);
 			}
 			else {
 				msg.reply('Database error. Please contact the bot creator for details.')
