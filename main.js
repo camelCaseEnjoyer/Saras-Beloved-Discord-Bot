@@ -9,6 +9,63 @@ const DEFAULT_COMMAND_PREFIX = '-';
 const ALPHANUMERICS_WHITESPACE = 'abcdefghijklmnopqrstuvwxyz1234567890 \t\n';
 const DEFAULT_MAX_PINS = 20;
 
+class PinLockManager {
+	_lockedChannels;
+	constructor () {
+		this._lockedChannels = [];
+	}
+	
+	async updateChannelPins(channel, guildPinboardID = null) {
+		if (this._lockedChannels.indexOf(channel.id) != -1) {
+			console.log('Channel is locked. Ending.')
+			return true;
+		}
+		console.log('Channel is unlocked. Let\'s get down to business.');
+		this._lockedChannels.push(channel.id);
+		let channelConfig = await getChannelConfigDoc(channel.id);
+		var pinboardID;
+		
+		if(channelConfig && channelConfig.pinboard) {
+			pinboardID = channelConfig.pinboard;
+		}
+		else if (guildPinboardID) {
+			pinboardID = guildPinboardID;
+		}
+		else {
+			let serverConfig = await getGuildConfigDoc(channel.guild.id);
+
+			if (serverConfig) {
+				pinboardID = serverConfig.pinboard
+			}
+		}
+		
+		const pinboard = await channel.guild.channels.fetch(pinboardID);
+		if(!pinboard) {
+			return false;
+		}
+		
+		let pinnedMessages = await channel.messages.fetchPinned();
+		console.log(`pinnedMessages.size: ${pinnedMessages.size}`)
+		var unpinMessage;
+		while(pinnedMessages.size > DEFAULT_MAX_PINS) {
+			console.log('We are trying to unpin');
+			console.log(`pinnedMessages.size: ${pinnedMessages.size}`)
+			unpinMessage = pinnedMessages.at(-1)
+			let copy = copyMessage(unpinMessage);
+			// Notepad++ is mean about this, but we're using three escaped backticks here
+			let sentDate = new Date(unpinMessage.createdTimestamp);
+			copy.content = `\`\`\`Sent by ${unpinMessage.author.username} on ${sentDate.toDateString()} at ${sentDate.toTimeString()}:\`\`\`\n${copy.content}`
+			await pinboard.send(copy);
+			pinnedMessages.delete(pinnedMessages.lastKey());
+			await unpinMessage.unpin()
+		}
+		// Unlock the channel for future pin shenanigans.
+		this._lockedChannels.splice(this._lockedChannels.indexOf(channel.id));
+		return true;
+	}
+	
+}
+
 async function getGuildConfigDoc(guildID) {
 	const configCollection = dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME);
 	var configDoc = configCollection.findOne({ _id : guildID });
@@ -21,37 +78,6 @@ async function getChannelConfigDoc(channelID) {
 	return configDoc;
 }
 
-async function updateChannelPins(channel, guildPinboardID = null) {
-	let channelConfig = await getChannelConfigDoc(channel.id);
-	var pinboardID;
-	
-	if(channelConfig && channelConfig.pinboard) {
-		pinboardID = channelConfig.pinboard;
-	}
-	else if (guildPinboardID) {
-		pinboardID = guildPinboardID;
-	}
-	else {
-		let serverConfig = await getGuildConfigDoc(channel.guild.id);
-
-		if (serverConfig) {
-			pinboardID = serverConfig.pinboard
-		}
-	}
-	
-	const pinboard = channel.guild.channels.fetch(pinboardID);
-	if(!pinboard) {
-		return false;
-	}
-	
-	const pinnedMessages = channel.messages.fetchPinned();
-	var unpinMessage;
-	while(pinnedMessages.size > DEFAULT_MAX_PINS) {
-		unpinMessage = pinnedMessages.last()
-		unpinMessage.unpin();
-		pinboard.send(copyMessage(unpinMessage));
-	}
-	return true;
 }
 
 // Upsert a document, using the filter as the default template for the created document.
@@ -227,6 +253,9 @@ const client = new Client({ intents: ['GUILDS', 'GUILD_MESSAGES', 'DIRECT_MESSAG
 // Also create a client to log in to mongodb. Not connected yet.
 const dbClient = new MongoClient(MONGO_URI);
 
+// Create a PinLockManager to make sure channels aren't being edited by multiple function instances at the same time.
+const pinManager = new PinLockManager();
+
 client.once('ready', () => {
     console.log('Connected to Discord.');
 });
@@ -271,6 +300,16 @@ client.on('guildDelete', async function (guild) {
 	}
 });
 
+client.on('channelPinsUpdate', async function (channel) {
+	console.log(`Updating pins for ${channel.toString()}`)
+	let result = await pinManager.updateChannelPins(channel);
+	if(result) {
+		console.log('No errors reported');
+	}
+	else {
+		console.log('Something went wrong...');
+	}
+});
 
 dbClient.connect((err) => {
 	if(err) {
