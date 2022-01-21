@@ -234,7 +234,7 @@ const COMMAND_MAP = new Map([
 			const result = await upsertFilter(collection, filter, updateDoc);
 			if (result) {
 				msg.reply(`Change successful! The new pinboard for ${msg.channel.toString()} is ${channelName}`);
-				updateChannelPins(msg.channel);
+				pinManager.updateChannelPins(msg.channel);
 			}
 			else {
 				msg.reply('Database error. Please contact the bot creator for details.')
@@ -243,6 +243,7 @@ const COMMAND_MAP = new Map([
 		else {
 			// console.log(`could not find channel: ${channelName}`);
 			msg.reply(`${channelName} was not found. Please verify spelling, and make sure you have included the # prefix.`);
+			return;
 		}
 	}],
 	['help', async function (msg) {
@@ -299,6 +300,8 @@ const COMMAND_MAP = new Map([
 		}
 	
 	}],
+	['blacklistchannel', async function (msg) {
+		return;
 	}],
 	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
 	['deleteallserverdata', async function (msg) {
