@@ -119,6 +119,17 @@ async function isCommand(msg) {
 	}
 }
 
+async function isBlacklisted(channel) {
+	var collection = dbClient.db(DB_NAME).collection(CHANNEL_CONFIG_NAME);
+	var configDoc = collection.findOne({_id : channel.id});
+	if(configDoc) {
+		return configDoc.blacklisted;
+	}
+	else {
+		return false;
+	}
+}
+
 // Finds a channel with a certain name in a specific guild
 function findChannelByName(guild, name) {
 	return guild.channels.cache.find(channel => {
@@ -264,7 +275,19 @@ const COMMAND_MAP = new Map([
 	
 	}],
 	['blacklistchannel', async function (msg) {
-		return;
+		const splitContents = msg.content.split(' ');
+        if (splitContents.length != 1) {
+            return 'blacklistChannel takes 0 arguments; simply use it in the channel to be blacklisted.';
+        }
+		const collection = dbClient.db(DB_NAME).collection(CHANNEL_CONFIG_NAME);
+		const result = await lazyUpsert(collection, msg.channel.id, {blacklisted : true});
+	
+		if(result) {
+			return `Success! Channel blacklisted.`;
+		}
+		else {
+			return `Database access failed. Please contact @${ADMIN_USERNAME}.`;
+		}
 	}],
 	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
 	['deleteallserverdata', async function (msg) {
@@ -309,6 +332,7 @@ client.on('messageCreate', async function(msg) {
         console.log('I sent a message!')
         return;
     }
+	let blacklisted = await isBlacklisted(msg.channel);
     // ignore case
     const lowerText = msg.content.toLowerCase();
 
@@ -325,7 +349,7 @@ client.on('messageCreate', async function(msg) {
         return;
     }
 
-    if (lowerText.includes('fight image')) {
+    if (lowerText.includes('fight image') && !blacklisted) {
         msg.channel.send('https://imgur.com/OSVZKMt');
         return;
     }
