@@ -222,6 +222,26 @@ const COMMAND_MAP = new Map([
 			msg.reply(`${channelName} was not found. Please verify spelling, and make sure you have included the # prefix.`);
 		}
 	}],
+	['help', async function (msg) {
+		let currentPrefix = msg.content.charAt(0);
+		msg.reply(`Thanks for choosing ${client.user.username} for your pinbot needs. Here's a rundown on all the commands you'll need:\n\n` +
+			`**help** - I think you have this one figured out.\n\n` +
+			`**setSaraPrefix** - Takes one character as an argument, and changes the default prefix to use my commands. ` +
+			`Example: \`\`\`${currentPrefix}setSaraPrefix !\`\`\`\n\n` +
+			`**setServerPinboard** - Sets the default pinboard for the entire server. All pin overflow will be sent to that pinboard, ` + 
+			`unless you set a channel-specific pinboard with ${currentPrefix}setChannelPinboard. Example: ` +
+			`\`\`\`${currentPrefix}setServerPinboard #pins\`\`\`\n\n` +
+			`**setChannelPinboard** - As above, but specific to the current channel. This overrides the setServerPinboard command for ` +
+			`that channel. Example: \`\`\`${currentPrefix}setChannelPinboard #special-pins\`\`\`\n\n` +
+			`**setMaxPins** - Sets how many pins a channel can have before excess pins are sent to the pinboard. Defaults to ${DEFAULT_MAX_PINS}. ` +
+			`Example: \`\`\`${currentPrefix}setMaxPins 35\`\`\` [WARNING: Not Yet Implemented!]\n\n` +
+			`**blacklistChannel** - Blacklists a channel from unsolicited memery. Does not block pinboard mechanics. Example: ` +
+			`\`\`\`${currentPrefix}blacklistChannel\`\`\`\ [WARNING: Not Yet Implemented!]\n\n` + 
+			`**unblacklistChannel** - Removes a channel from the blacklist. Example: \`\`\`${currentPrefix}unblacklistChannel\`\`\` ` +
+			`[WARNING: Not Yet Implemented!]\n\n` +
+			`**updateGuildPins** - Checks all channels for pin overflow, and sends excess messages to the appropriate pinboard. ` +
+			`Example: \`\`\`${currentPrefix}updateGuildPins\`\`\` [WARNING: Not Yet Implemented!]\n\n`)
+	}],
 	}],
 	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
 	['deleteallserverdata', async function (msg) {
