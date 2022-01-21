@@ -7,7 +7,7 @@ const SERVER_CONFIG_NAME = 'Server-Config'
 const CHANNEL_CONFIG_NAME = 'Channel-Config'
 const DEFAULT_COMMAND_PREFIX = '-';
 const ALPHANUMERICS_WHITESPACE = 'abcdefghijklmnopqrstuvwxyz1234567890 \t\n';
-const DEFAULT_MAX_PINS = 20;
+const DEFAULT_MAX_PINS = 40;
 
 class PinLockManager {
 	_lockedChannels;
