@@ -241,9 +241,8 @@ const COMMAND_MAP = new Map([
 			`**setMaxPins** - Sets how many pins a channel can have before excess pins are sent to the pinboard. Defaults to ${DEFAULT_MAX_PINS}. ` +
 			`Example: \`\`\`${currentPrefix}setMaxPins 35\`\`\`\n\n` +
 			`**blacklistChannel** - Blacklists a channel from unsolicited memery. Does not block pinboard mechanics. Example: ` +
-			`\`\`\`${currentPrefix}blacklistChannel\`\`\`\\n\n` + 
-			`**unblacklistChannel** - Removes a channel from the blacklist. Example: \`\`\`${currentPrefix}unblacklistChannel\`\`\` ` +
-			`[WARNING: Not Yet Implemented!]\n\n` +
+			`\`\`\`${currentPrefix}blacklistChannel\`\`\`\n\n` + 
+			`**unblacklistChannel** - Removes a channel from the blacklist. Example: \`\`\`${currentPrefix}unblacklistChannel\`\`\`\n\n` +
 			`**updateServerPins** - Checks all channels for pin overflow, and sends excess messages to the appropriate pinboard. ` +
 			`Example: \`\`\`${currentPrefix}updateGuildPins\`\`\`\n\n` +
 			`For additional assistance, message @${ADMIN_USERNAME}.`
