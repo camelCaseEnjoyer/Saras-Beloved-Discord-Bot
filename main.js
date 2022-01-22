@@ -126,7 +126,7 @@ async function isCommand(msg) {
 
 async function isBlacklisted(channel) {
 	var collection = dbClient.db(DB_NAME).collection(CHANNEL_CONFIG_NAME);
-	var configDoc = collection.findOne({_id : channel.id});
+	var configDoc = await collection.findOne({_id : channel.id});
 	if(configDoc) {
 		return configDoc.blacklisted;
 	}
