@@ -379,7 +379,7 @@ client.on('guildCreate', async function (guild) {
 	guild.systemChannel.send(`Hello! Thanks for choosing ${client.user.username} for your pinboard needs. Here's how it works:\n` +
 	`First, set a serverwide pinboard using **${DEFAULT_COMMAND_PREFIX}setServerPinboard**. \nIf necessary, set channel specific pinboards ` +
 	`using **${DEFAULT_COMMAND_PREFIX}setChannelPinboard**. \nThen, either start pinning messages or use the ${DEFAULT_COMMAND_PREFIX}updateServerPins ` +
-	`command, and I'll start moving excess pins into your designated pinboard channels. Any more questions? Use my ${DEFAULT_COMMAND_PREFIX}help` +
+	`command, and I'll start moving excess pins into your designated pinboard channels. \n\nAny more questions? Use my **${DEFAULT_COMMAND_PREFIX}help** ` +
     `command, or contact @${ADMIN_USERNAME}.`)
 })
 
