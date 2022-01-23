@@ -307,8 +307,9 @@ const COMMAND_MAP = new Map([
 		else {
 			return `Database access failed. Please contact @${ADMIN_USERNAME}.`;
 		}
-	}],
-	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THIS COMMAND BEFORE RELEASE /////////
+	}]
+	///////// TESTING ONLY: MAKE SURE TO DELETE OR COMMENT THESE COMMANDS BEFORE RELEASE /////////
+	/*
 	['deleteallserverdata', async function (msg) {
 		const guildID = msg.guild.id;
 		result = await dbClient.db(DB_NAME).collection(SERVER_CONFIG_NAME).findOneAndDelete({_id : guildID});
@@ -328,7 +329,7 @@ const COMMAND_MAP = new Map([
 		catch (MESSAGE_REFERENCE_MISSING) {
 			return 'Originating message not found. Please only use this command in reply to another message.';
 		}
-	}]
+	}]*/
 ])
 
 // Create a new discord client instance. See https://discord.com/developers/docs/topics/gateway#gateway-intents for the intents we're using.
