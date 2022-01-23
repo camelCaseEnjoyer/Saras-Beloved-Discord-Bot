@@ -244,7 +244,7 @@ const COMMAND_MAP = new Map([
 			`\`\`\`${currentPrefix}blacklistChannel\`\`\`\n\n` + 
 			`**unblacklistChannel** - Removes a channel from the blacklist. Example: \`\`\`${currentPrefix}unblacklistChannel\`\`\`\n\n` +
 			`**updateServerPins** - Checks all channels for pin overflow, and sends excess messages to the appropriate pinboard. ` +
-			`Example: \`\`\`${currentPrefix}updateGuildPins\`\`\`\n\n` +
+			`Example: \`\`\`${currentPrefix}updateServerPins\`\`\`\n\n` +
 			`For additional assistance, message @${ADMIN_USERNAME}.`
 	}],
 	['updateserverpins', async function (msg) {
