@@ -43,8 +43,6 @@ class PinLockManager {
 		console.log(`pinnedMessages.size: ${pinnedMessages.size}`)
 		var unpinMessage;
 		while(pinnedMessages.size > maxPins) {
-			console.log('We are trying to unpin');
-			console.log(`pinnedMessages.size: ${pinnedMessages.size}`)
 			unpinMessage = pinnedMessages.at(-1)
 			let copy = copyMessage(unpinMessage);
 			// Notepad++ is mean about this, but we're using three escaped backticks here
@@ -347,7 +345,6 @@ client.once('ready', () => {
 client.on('messageCreate', async function(msg) {
     // NOTE: If statements are listed in order of precedence. Ignoring our own messages > commands > memes.
     if (msg.author == client.user) {
-        console.log('I sent a message!')
         return;
     }
 	let blacklisted = await isBlacklisted(msg.channel);
@@ -357,7 +354,6 @@ client.on('messageCreate', async function(msg) {
     // TODO: check for role permissions for major changes
 	let command = await isCommand(msg);
     if (command) {
-        console.log('Processing Command!')
         // Look at just the first word of the command and ignore the prefix. 
         const command = lowerText.split(' ')[0].slice(1);
         if (COMMAND_MAP.has(command)) {
