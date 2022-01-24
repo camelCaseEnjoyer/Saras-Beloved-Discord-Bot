@@ -60,8 +60,8 @@ class PinLockManager {
 			await unpinMessage.unpin()
 		}
 		// Unlock the channel for future pin shenanigans.
-		this._lockedChannels.splice(this._lockedChannels.indexOf(channel.id));
 		return true;
+		this._lockedChannels.splice(this._lockedChannels.indexOf(channel.id), 1);
 	}
 	
 }
@@ -244,7 +244,7 @@ const COMMAND_MAP = new Map([
 			`**updateServerPins** - Checks all channels for pin overflow, and sends excess messages to the appropriate pinboard. ` +
 			`Example: \`\`\`${currentPrefix}updateServerPins\`\`\`\n\n` +
 			`For additional assistance, message @${ADMIN_USERNAME}.`
-	}],/* // This is causing issues.
+	}],
 	['updateserverpins', async function (msg) {
 		const result = await updateGuildPins(msg.guild);
 		if(result) {
@@ -253,7 +253,7 @@ const COMMAND_MAP = new Map([
 		else {
 			return 'Command failed. If you have not yet set a pinboard, please do so with the setServerPinboard or setChannelPinboard commands.';
 		}
-	}],*/
+	}],
 	['setmaxpins', async function(msg) {
 		const splitContents = msg.content.split(' ');
         if (splitContents.length != 2 || isNaN(splitContents[1])) {
