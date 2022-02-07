@@ -9,25 +9,22 @@ const DEFAULT_COMMAND_PREFIX = '-';
 const ALPHANUMERICS_WHITESPACE = 'abcdefghijklmnopqrstuvwxyz1234567890 \t\n';
 const DEFAULT_MAX_PINS = 40;
 
-class PinLockManager {
-	_lockedChannels;
-	constructor () {
-		this._lockedChannels = [];
-	}
-	
+let PinLockManager = {
+	_lockedChannels : [],
 	async updateChannelPins(channel) {
 		if (this._lockedChannels.indexOf(channel.id) != -1) {
 			console.log('Channel is locked. Ending.')
 			return true;
 		}
 		this._lockedChannels.push(channel.id);
-		var maxPins = DEFAULT_MAX_PINS;
+		let maxPins = DEFAULT_MAX_PINS;
+		
 		const serverConfig = await getGuildConfigDoc(channel.guild.id);
 		if(serverConfig && serverConfig.maxPins) {
 			maxPins = serverConfig.maxPins;
 		}
 		let channelConfig = await getChannelConfigDoc(channel.id);
-		var pinboardID;
+		let pinboardID;
 		
 		if(channelConfig && channelConfig.pinboard) {
 			pinboardID = channelConfig.pinboard;
@@ -39,13 +36,16 @@ class PinLockManager {
 			return false;
 		}
 		
-		let pinnedMessages = await channel.messages.fetchPinned();
-		console.log(`pinnedMessages.size: ${pinnedMessages.size}`)
+		let pinboardAndPinsPromise = Promise.all([channel.guild.channels.fetch(pinboardID), channel.messages.fetchPinned()])
 		var unpinMessage;
-		while(pinnedMessages.size > maxPins) {
-			console.log('We are trying to unpin');
-			console.log(`pinnedMessages.size: ${pinnedMessages.size}`)
-			unpinMessage = pinnedMessages.at(-1)
+		let copyAndUnpinPromises = [];
+	
+		// Once the pinboard and pinned messages have been acquired, we put them into vars and get to work.
+		const [pinboard, pins] = await pinboardAndPinsPromise;
+		
+		while(pins.size > maxPins) {
+			// Make a copy of the first pin (chronologically)
+			unpinMessage = pins.at(-1)
 			let copy = copyMessage(unpinMessage);
 			// Notepad++ is mean about this, but we're using three escaped backticks here
 			let sentDate = new Date(unpinMessage.createdTimestamp);
@@ -55,13 +55,17 @@ class PinLockManager {
 			`Time: ${sentDate.toTimeString()}\n` +
 			`\`\`\`\n${copy.content}`
 			
-			await pinboard.send(copy);
-			pinnedMessages.delete(pinnedMessages.lastKey());
-			await unpinMessage.unpin()
+			// Start working on sending the copy and unpinning the original, and keep an array of promises.
+			copyAndUnpinPromises.push(pinboard.send(copy).catch(console.error));
+			copyAndUnpinPromises.push(unpinMessage.unpin().catch(console.error));
+			pins.delete(pins.lastKey());
 		}
-		// Unlock the channel for future pin shenanigans.
-		this._lockedChannels.splice(this._lockedChannels.indexOf(channel.id));
-		return true;
+
+		// Unlock the channel for future pin shenanigans only once all the messages have been unpinned and sent.
+		result = await Promise.allSettled(copyAndUnpinPromises);
+		this._lockedChannels.splice(this._lockedChannels.indexOf(channel.id), 1);
+
+		return result;
 	}
 	
 }
@@ -86,7 +90,7 @@ async function updateGuildPins(guild) {
 	for (const pair of channels) {
 		// Text channels only, please.
 		if (pair[1].type == 'GUILD_TEXT') {
-			results.push(pinManager.updateChannelPins(pair[1]));
+			results.push(PinLockManager.updateChannelPins(pair[1]));
 		}
 	}
 	results = await Promise.all(results);
@@ -213,7 +217,7 @@ const COMMAND_MAP = new Map([
 			const collection = dbClient.db(DB_NAME).collection(CHANNEL_CONFIG_NAME);
 			const result = await lazyUpsert(collection, msg.channel.id, {pinboard : newPinboard.id});
 			if (result) {
-				pinManager.updateChannelPins(msg.channel);
+				await PinLockManager.updateChannelPins(msg.channel);
 				return `Change successful! The new pinboard for ${msg.channel.toString()} is ${channelName}`;
 			}
 			else {
@@ -244,7 +248,7 @@ const COMMAND_MAP = new Map([
 			`**updateServerPins** - Checks all channels for pin overflow, and sends excess messages to the appropriate pinboard. ` +
 			`Example: \`\`\`${currentPrefix}updateServerPins\`\`\`\n\n` +
 			`For additional assistance, message @${ADMIN_USERNAME}.`
-	}],/* // This is causing issues.
+	}],
 	['updateserverpins', async function (msg) {
 		const result = await updateGuildPins(msg.guild);
 		if(result) {
@@ -253,7 +257,7 @@ const COMMAND_MAP = new Map([
 		else {
 			return 'Command failed. If you have not yet set a pinboard, please do so with the setServerPinboard or setChannelPinboard commands.';
 		}
-	}],*/
+	}],
 	['setmaxpins', async function(msg) {
 		const splitContents = msg.content.split(' ');
         if (splitContents.length != 2 || isNaN(splitContents[1])) {
@@ -336,9 +340,6 @@ const client = new Client({ intents: ['GUILDS', 'GUILD_MESSAGES', 'DIRECT_MESSAG
 // Also create a client to log in to mongodb. Not connected yet.
 const dbClient = new MongoClient(MONGO_URI);
 
-// Create a PinLockManager to make sure channels aren't being edited by multiple function instances at the same time.
-const pinManager = new PinLockManager();
-
 client.once('ready', () => {
     console.log('Connected to Discord.');
 });
@@ -347,7 +348,6 @@ client.once('ready', () => {
 client.on('messageCreate', async function(msg) {
     // NOTE: If statements are listed in order of precedence. Ignoring our own messages > commands > memes.
     if (msg.author == client.user) {
-        console.log('I sent a message!')
         return;
     }
 	let blacklisted = await isBlacklisted(msg.channel);
@@ -357,7 +357,6 @@ client.on('messageCreate', async function(msg) {
     // TODO: check for role permissions for major changes
 	let command = await isCommand(msg);
     if (command) {
-        console.log('Processing Command!')
         // Look at just the first word of the command and ignore the prefix. 
         const command = lowerText.split(' ')[0].slice(1);
         if (COMMAND_MAP.has(command)) {
@@ -394,8 +393,8 @@ client.on('guildDelete', async function (guild) {
 });
 
 client.on('channelPinsUpdate', async function (channel) {
-	console.log(`Updating pins for ${channel.toString()}`)
-	let result = await pinManager.updateChannelPins(channel);
+	console.log(`Pins changed for ${channel.name}`)
+	let result = await PinLockManager.updateChannelPins(channel);
 	if(result) {
 		console.log('No errors reported');
 	}
